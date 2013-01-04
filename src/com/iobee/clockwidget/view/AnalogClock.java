@@ -48,8 +48,6 @@ public class AnalogClock extends View {
     private int mDialWidth;
     private int mDialHeight;
 
-    private boolean mAttached;
-
     private final Handler mHandler = new Handler();
     private float mMinutes;
     private float mHour;
@@ -103,18 +101,6 @@ public class AnalogClock extends View {
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
-
-        if (!mAttached) {
-            mAttached = true;
-            IntentFilter filter = new IntentFilter();
-
-            filter.addAction(Intent.ACTION_TIME_TICK);
-            filter.addAction(Intent.ACTION_TIME_CHANGED);
-            filter.addAction(Intent.ACTION_TIMEZONE_CHANGED);
-
-            getContext().registerReceiver(mIntentReceiver, filter, null, mHandler);
-        }
-
         // NOTE: It's safe to do these after registering the receiver since the receiver always runs
         // in the main thread, therefore the receiver can't run before this method returns.
 
@@ -123,15 +109,6 @@ public class AnalogClock extends View {
 
         // Make sure we update to the current time
         onTimeChanged();
-    }
-
-    @Override
-    protected void onDetachedFromWindow() {
-        super.onDetachedFromWindow();
-        if (mAttached) {
-            getContext().unregisterReceiver(mIntentReceiver);
-            mAttached = false;
-        }
     }
     
     @Override
@@ -252,20 +229,15 @@ public class AnalogClock extends View {
 
         updateContentDescription(mCalendar);
     }
-
-    private final BroadcastReceiver mIntentReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (intent.getAction().equals(Intent.ACTION_TIMEZONE_CHANGED)) {
-                String tz = intent.getStringExtra("time-zone");
-                mCalendar = new Time(TimeZone.getTimeZone(tz).getID());
-            }
-
-            onTimeChanged();
-            
-            invalidate();
-        }
-    };
+    
+    /**
+     * set clock widget to now;
+     */
+    public void updateClock(){
+    	onTimeChanged();
+        
+        invalidate();
+    }
 
     private void updateContentDescription(Time time) {
         final int flags = DateUtils.FORMAT_SHOW_TIME | DateUtils.FORMAT_24HOUR;
