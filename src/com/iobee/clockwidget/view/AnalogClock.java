@@ -17,21 +17,16 @@
 package com.iobee.clockwidget.view;
 
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.BroadcastReceiver;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
-import android.os.Handler;
 import android.text.format.DateUtils;
 import android.text.format.Time;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 import android.widget.RemoteViews.RemoteView;
-
-import java.util.TimeZone;
 
 /**
  * This widget display an analogic clock with two hands for hours and
@@ -39,7 +34,9 @@ import java.util.TimeZone;
  */
 @RemoteView
 public class AnalogClock extends View {
-    private Time mCalendar;
+    private static final String TAG = AnalogClock.class.getName();
+
+	private Time mCalendar;
 
     private Drawable mHourHand;
     private Drawable mMinuteHand;
@@ -48,7 +45,6 @@ public class AnalogClock extends View {
     private int mDialWidth;
     private int mDialHeight;
 
-    private final Handler mHandler = new Handler();
     private float mMinutes;
     private float mHour;
     private boolean mChanged;
@@ -97,10 +93,36 @@ public class AnalogClock extends View {
         mDialWidth = mDial.getIntrinsicWidth();
         mDialHeight = mDial.getIntrinsicHeight();
     }
+    
+    /**
+     * set dial background
+     * @param dial
+     */
+    public void setDial(Drawable dial){
+    	mDial = dial;
+    	invalidate();
+    }
+    
+    /**
+     * set hourhand background
+     * @param hourHand
+     */
+    public void setHourHand(Drawable hourHand){
+    	mHourHand = hourHand;
+    }
+    
+    /**
+     * set minutehand background
+     * @param minuteHand
+     */
+    public void setMinuteHand(Drawable minuteHand){
+    	mMinuteHand = minuteHand;
+    }
 
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
+        Log.i(TAG, "-->onAttachedToWindow");
         // NOTE: It's safe to do these after registering the receiver since the receiver always runs
         // in the main thread, therefore the receiver can't run before this method returns.
 
@@ -234,8 +256,7 @@ public class AnalogClock extends View {
      * set clock widget to now;
      */
     public void updateClock(){
-    	onTimeChanged();
-        
+    	onTimeChanged();       
         invalidate();
     }
 

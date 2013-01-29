@@ -4,7 +4,6 @@ import java.util.Calendar;
 
 import com.iobee.clockwidget.view.AnalogClock;
 
-import android.R;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
@@ -19,7 +18,6 @@ import android.widget.RemoteViews;
 
 public class AnalogClockProvider extends AppWidgetProvider {
 
-	@SuppressWarnings("unused")
 	private static final String TAG = "AnalogClockProvider";
 
 	public static String ACTION_CLOCK_UPDATE = "com.iobee.clockwidget.ACTION_CLOCK_UPDATE";
