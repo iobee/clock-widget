@@ -2,6 +2,7 @@ package com.iobee.clockwidget;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 
 import com.iobee.clockwidget.view.AnalogClock;
 
@@ -63,5 +64,18 @@ public class ActivityMain extends Activity {
 
 		return v;
 	}
+    
+    private List<Drawable> getDrawableFromAssets(){
+    	try {
+			String[] paths = mContext.getResources().getAssets().list("");
+			
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	
+		return null;
+    }
     
 }
