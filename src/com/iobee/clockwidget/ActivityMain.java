@@ -5,34 +5,31 @@ import java.io.InputStream;
 
 import com.iobee.clockwidget.view.AnalogClock;
 
+import android.os.Build;
 import android.os.Bundle;
+import android.annotation.TargetApi;
 import android.app.Activity;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 
 public class ActivityMain extends Activity {
-	private Button refreshView;
 	private AnalogClock analogClock;
+	
+	private Context mContext;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        mContext = this;
         
-        refreshView = (Button)findViewById(R.id.button_RefreshView);
         analogClock = (AnalogClock)findViewById(R.id.analogClock);
         
-        refreshView.setOnClickListener(new View.OnClickListener() {
-			
-			@Override
-			public void onClick(View v) {
-				// TODO Auto-generated method stub
-				testSetDial();
-			}
-		});
     }
 
     @Override
@@ -42,16 +39,29 @@ public class ActivityMain extends Activity {
         return true;
     }
     
-    private void testSetDial(){
-    	try {
-			InputStream is = getResources().getAssets().open("clock_dial.png");
-			Drawable drawableDial = Drawable.createFromStream(is, null);
-	    	analogClock.setDial(drawableDial);			
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN) 
+    @SuppressWarnings("deprecation")
+	private ImageView createImageView(final Drawable drawable){
+		ImageView v = new ImageView(mContext);
+		int sdk = android.os.Build.VERSION.SDK_INT;
+		if(sdk < android.os.Build.VERSION_CODES.JELLY_BEAN){
+			v.setBackgroundDrawable(drawable);
+		} else {
+			v.setBackground(drawable);
 		}
-    	
-    }
+		
+		v.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				if(analogClock != null){
+					analogClock.setDial(drawable);
+				}
+			}
+		});
+
+		return v;
+	}
     
 }
