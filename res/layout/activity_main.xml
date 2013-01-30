@@ -1,19 +1,29 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".ActivityMain" xmlns:app="http://schemas.android.com/apk/res/com.iobee.clockwidget">
+    android:layout_height="match_parent" >
 
     <com.iobee.clockwidget.view.AnalogClock
-        android:id="@+id/analogClock" 
+        xmlns:app="http://schemas.android.com/apk/res/com.iobee.clockwidget"
+        android:id="@+id/analogClock"
         android:layout_width="150dp"
         android:layout_height="150dp"
-        android:layout_centerInParent="true" />
-    <Button 
-        android:id="@+id/button_RefreshView"
-        android:layout_height="wrap_content"
-        android:layout_width="wrap_content"
-        android:text="Refresh"
-        android:layout_below="@id/analogClock"/>
+        android:layout_gravity="center" />
 
-</RelativeLayout>
+    <HorizontalScrollView
+        android:id="@+id/viewBox_horinzon"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:visibility="gone" >
+
+        <LinearLayout
+            android:id="@+id/viewBox_dial"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:color/darker_gray"
+            android:gravity="center_vertical"
+            android:orientation="horizontal" >
+        </LinearLayout>
+    </HorizontalScrollView>
+
+</FrameLayout>

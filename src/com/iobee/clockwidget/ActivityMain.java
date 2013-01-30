@@ -1,26 +1,27 @@
 package com.iobee.clockwidget;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 
-import com.iobee.clockwidget.view.AnalogClock;
-
-import android.os.Build;
-import android.os.Bundle;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
-import android.graphics.Bitmap;
+import android.content.res.AssetManager;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
+import android.os.Bundle;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
+import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
+
+import com.iobee.clockwidget.view.AnalogClock;
 
 public class ActivityMain extends Activity {
 	private AnalogClock analogClock;
-	
+	private HorizontalScrollView vBoxHorinzon;
 	private Context mContext;
 
     @Override
@@ -30,7 +31,7 @@ public class ActivityMain extends Activity {
         mContext = this;
         
         analogClock = (AnalogClock)findViewById(R.id.analogClock);
-        
+        vBoxHorinzon = (HorizontalScrollView)findViewById(R.id.viewBox_horinzon);
     }
 
     @Override
@@ -38,6 +39,13 @@ public class ActivityMain extends Activity {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.activity_main, menu);
         return true;
+    }
+    
+    @Override
+    public boolean onMenuItemSelected(int featureId, MenuItem item) {
+    	// TODO Auto-generated method stub
+    	vBoxHorinzon.setVisibility(View.VISIBLE);
+    	return true;
     }
     
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN) 
@@ -65,17 +73,26 @@ public class ActivityMain extends Activity {
 		return v;
 	}
     
-    private List<Drawable> getDrawableFromAssets(){
+    private List<Drawable> getDrawableFromAssets(String path){
+    	List<Drawable> drawables = new ArrayList<Drawable>();
+    	
     	try {
-			String[] paths = mContext.getResources().getAssets().list("");
-			
-			
+    		AssetManager am = mContext.getResources().getAssets();
+			String[] files = am.list(path);
+			for(String file : files){
+				drawables.add(Drawable.createFromStream(am.open(file), null));
+			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
     	
-		return null;
+		return drawables;
+    }
+    
+    @SuppressWarnings("unused")
+	private List<Drawable> getDrawableFromSDCard(String path){
+    	return null;
     }
     
 }
