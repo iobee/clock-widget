@@ -16,12 +16,15 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 
 import com.iobee.clockwidget.view.AnalogClock;
 
 public class ActivityMain extends Activity {
 	private AnalogClock analogClock;
 	private HorizontalScrollView vBoxHorinzon;
+	private LinearLayout vBoxDial;
+	
 	private Context mContext;
 
     @Override
@@ -32,6 +35,9 @@ public class ActivityMain extends Activity {
         
         analogClock = (AnalogClock)findViewById(R.id.analogClock);
         vBoxHorinzon = (HorizontalScrollView)findViewById(R.id.viewBox_horinzon);
+        vBoxDial = (LinearLayout)findViewById(R.id.viewBox_dial);
+        
+        addAssetsDrawableToBox();
     }
 
     @Override
@@ -80,7 +86,7 @@ public class ActivityMain extends Activity {
     		AssetManager am = mContext.getResources().getAssets();
 			String[] files = am.list(path);
 			for(String file : files){
-				drawables.add(Drawable.createFromStream(am.open(file), null));
+				drawables.add(Drawable.createFromStream(am.open(path + "/" +file), null));
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -88,6 +94,13 @@ public class ActivityMain extends Activity {
 		}
     	
 		return drawables;
+    }
+    
+    private void addAssetsDrawableToBox(){
+    	List<Drawable> drawables = getDrawableFromAssets("dial");
+    	for(Drawable dial : drawables){
+    		vBoxDial.addView(createImageView(dial));
+    	}
     }
     
     @SuppressWarnings("unused")
