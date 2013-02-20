@@ -39,6 +39,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.iobee.clockwidget.tool.DrawableUtils;
 import com.iobee.clockwidget.view.AnalogClock;
 
 public class ActivityConfiguration extends Activity {
@@ -56,6 +57,7 @@ public class ActivityConfiguration extends Activity {
 	private int viewNum = 0; // 表示当前已经添加了多少view了。
 
 	private Context mContext;
+	private DrawableUtils drawableUtils;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -66,8 +68,12 @@ public class ActivityConfiguration extends Activity {
 		analogClock = (AnalogClock) findViewById(R.id.analogClock);
 		vBoxHorinzon = (HorizontalScrollView) findViewById(R.id.viewBox_horinzon);
 		vBoxDial = (LinearLayout) findViewById(R.id.viewBox_dial);
+		
+		drawableUtils = new DrawableUtils(this);
 
-		addAssetsDrawableToBox();
+		drawableUtils.addAssetsDrawableToBox(vBoxDial, null);
+		
+		//TODO:move this function to DrawableUtils
 		vBoxDial.addView(createAddButton());
 	}
 
@@ -83,72 +89,6 @@ public class ActivityConfiguration extends Activity {
 		// TODO Auto-generated method stub
 		vBoxHorinzon.setVisibility(View.VISIBLE);
 		return true;
-	}
-
-	@TargetApi(Build.VERSION_CODES.JELLY_BEAN)
-	@SuppressWarnings("deprecation")
-	private ImageView createImageView(final Drawable drawable) {
-		ImageView v = new ImageView(mContext);
-		int sdk = android.os.Build.VERSION.SDK_INT;
-		if (sdk < android.os.Build.VERSION_CODES.JELLY_BEAN) {
-			v.setBackgroundDrawable(drawable);
-		} else {
-			v.setBackground(drawable);
-		}
-
-		v.setOnClickListener(new View.OnClickListener() {
-
-			@Override
-			public void onClick(View v) {
-				// TODO Auto-generated method stub
-				if (analogClock != null) {
-					analogClock.setDial(drawable);
-				}
-			}
-		});
-
-		return v;
-	}
-
-	private List<Drawable> getDrawableFromAssets(String path) {
-		List<Drawable> drawables = new ArrayList<Drawable>();
-
-		try {
-			AssetManager am = mContext.getResources().getAssets();
-			String[] files = am.list(path);
-			for (String file : files) {
-				drawables.add(Drawable.createFromStream(
-						am.open(path + "/" + file), null));
-			}
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		return drawables;
-	}
-
-	private void addAssetsDrawableToBox() {
-		List<Drawable> drawables = getDrawableFromAssets("dial");
-		for (Drawable dial : drawables) {
-			viewNum++;
-			vBoxDial.addView(createImageView(dial));
-		}
-	}
-
-	private void addSDCardDrawableToBox(String path) {
-		File testFile = new File(path);
-		try {
-
-			FileInputStream fin = new FileInputStream(testFile);
-			Drawable drawable = Drawable.createFromStream(fin, null);
-			vBoxDial.addView(createImageView(drawable), viewNum);
-			viewNum++;
-
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 	}
 
 	private Button createAddButton() {
@@ -234,7 +174,7 @@ public class ActivityConfiguration extends Activity {
 					e.printStackTrace();
 				}
 				
-				vBoxDial.addView(createImageView(new BitmapDrawable(photo)));
+				vBoxDial.addView(drawableUtils.createImageView(new BitmapDrawable(photo)));
 			}
 
 			File f = new File(mImageCaptureUri.getPath());

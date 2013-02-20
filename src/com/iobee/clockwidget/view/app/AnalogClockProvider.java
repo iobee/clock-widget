@@ -65,7 +65,7 @@ public class AnalogClockProvider extends AppWidgetProvider {
 	}
 
 	/**
-	 * Creates an intent to update the clock(s).
+	 *  to update the clock(s).
 	 * 
 	 * @param context
 	 * @return
