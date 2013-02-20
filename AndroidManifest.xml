@@ -7,6 +7,7 @@
     <uses-sdk
         android:minSdkVersion="11"
         android:targetSdkVersion="17" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
     <application
         android:allowBackup="true"
@@ -14,16 +15,31 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
         <activity
-            android:name="com.iobee.clockwidget.ActivityMain"
+            android:name="com.iobee.clockwidget.ActivityConfiguration"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         
-        <receiver 
-            android:name="com.iobee.clockwidget.view.app.AnalogClockProvider">
+        <activity
+            android:name="org.goodev.cropimage.CropImage"
+            android:configChanges="orientation|keyboardHidden"
+            android:label="@string/crop_label" >
+            <intent-filter android:label="@string/crop_label" >
+                <action android:name="com.android.camera.action.CROP" />
+
+                <data android:mimeType="image/*" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.ALTERNATIVE" />
+                <category android:name="android.intent.category.SELECTED_ALTERNATIVE" />
+            </intent-filter>
+        </activity>
+
+        <receiver android:name="com.iobee.clockwidget.view.app.AnalogClockProvider" >
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>

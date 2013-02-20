@@ -2,6 +2,8 @@ package com.iobee.clockwidget.view.app;
 
 import java.util.Calendar;
 
+import com.iobee.clockwidget.ActivityConfiguration;
+import com.iobee.clockwidget.R;
 import com.iobee.clockwidget.view.AnalogClock;
 
 import android.app.AlarmManager;
@@ -28,7 +30,7 @@ public class AnalogClockProvider extends AppWidgetProvider {
 	public void onEnabled(Context context) {
 		// TODO Auto-generated method stub
 		super.onEnabled(context);
-
+		
 		startTicking(context);
 	}
 
@@ -104,7 +106,8 @@ public class AnalogClockProvider extends AppWidgetProvider {
 			rv.setImageViewBitmap(com.iobee.clockwidget.R.id.analogClock,
 					cached);
 		}
-
+		
+		configureDial(context, rv);
 		appWidgetManager.updateAppWidget(appWidgetIds, rv);
 	}
 
@@ -129,5 +132,11 @@ public class AnalogClockProvider extends AppWidgetProvider {
 				onUpdate(context, appWidgetManager, ids);
 			}
 		}
+	}
+	
+	private void configureDial(Context context, RemoteViews rv){
+		Intent configIntent = new Intent(context, ActivityConfiguration.class);
+		PendingIntent dialPendingIntent = PendingIntent.getActivity(context, 0, configIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+		rv.setOnClickPendingIntent(R.id.analogClock, dialPendingIntent);
 	}
 }

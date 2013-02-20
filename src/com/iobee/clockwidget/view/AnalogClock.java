@@ -17,16 +17,23 @@
 package com.iobee.clockwidget.view;
 
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.BroadcastReceiver;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
+import android.os.Handler;
 import android.text.format.DateUtils;
 import android.text.format.Time;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
 import android.widget.RemoteViews.RemoteView;
+
+import java.util.TimeZone;
+
+import com.iobee.clockwidget.R;
 
 /**
  * This widget display an analogic clock with two hands for hours and
@@ -34,9 +41,7 @@ import android.widget.RemoteViews.RemoteView;
  */
 @RemoteView
 public class AnalogClock extends View {
-    private static final String TAG = AnalogClock.class.getName();
-
-	private Time mCalendar;
+    private Time mCalendar;
 
     private Drawable mHourHand;
     private Drawable mMinuteHand;
@@ -45,17 +50,12 @@ public class AnalogClock extends View {
     private int mDialWidth;
     private int mDialHeight;
 
+    private boolean mAttached;
+
+    private final Handler mHandler = new Handler();
     private float mMinutes;
     private float mHour;
     private boolean mChanged;
-
-	private int mRight;
-
-	private int mLeft;
-
-	private int mBottom;
-
-	private int mTop;
 
     public AnalogClock(Context context) {
         this(context, null);
@@ -71,21 +71,21 @@ public class AnalogClock extends View {
         Resources r = getContext().getResources();
         TypedArray a =
                 context.obtainStyledAttributes(
-                        attrs, com.iobee.clockwidget.R.styleable.AnalogClock, defStyle, 0);
+                        attrs, R.styleable.AnalogClock, defStyle, 0);
 
-        mDial = a.getDrawable(com.iobee.clockwidget.R.styleable.AnalogClock_dial);
+        mDial = a.getDrawable(R.styleable.AnalogClock_dial);
         if (mDial == null) {
-            mDial = r.getDrawable(com.iobee.clockwidget.R.drawable.clock_dial);
+            mDial = r.getDrawable(R.drawable.clock_dial);
         }
 
-        mHourHand = a.getDrawable(com.iobee.clockwidget.R.styleable.AnalogClock_hand_hour);
+        mHourHand = a.getDrawable(R.styleable.AnalogClock_hand_hour);
         if (mHourHand == null) {
-            mHourHand = r.getDrawable(com.iobee.clockwidget.R.drawable.clock_hand_hour);
+            mHourHand = r.getDrawable(R.drawable.clock_hand_hour);
         }
 
-        mMinuteHand = a.getDrawable(com.iobee.clockwidget.R.styleable.AnalogClock_hand_minute);
+        mMinuteHand = a.getDrawable(R.styleable.AnalogClock_hand_minute);
         if (mMinuteHand == null) {
-            mMinuteHand = r.getDrawable(com.iobee.clockwidget.R.drawable.clock_hand_minute);
+            mMinuteHand = r.getDrawable(R.drawable.clock_hand_minute);
         }
 
         mCalendar = new Time();
@@ -93,36 +93,22 @@ public class AnalogClock extends View {
         mDialWidth = mDial.getIntrinsicWidth();
         mDialHeight = mDial.getIntrinsicHeight();
     }
-    
-    /**
-     * set dial background
-     * @param dial
-     */
-    public void setDial(Drawable dial){
-    	mDial = dial;
-    	invalidate();
-    }
-    
-    /**
-     * set hourhand background
-     * @param hourHand
-     */
-    public void setHourHand(Drawable hourHand){
-    	mHourHand = hourHand;
-    }
-    
-    /**
-     * set minutehand background
-     * @param minuteHand
-     */
-    public void setMinuteHand(Drawable minuteHand){
-    	mMinuteHand = minuteHand;
-    }
 
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
-        Log.i(TAG, "-->onAttachedToWindow");
+
+        if (!mAttached) {
+            mAttached = true;
+            IntentFilter filter = new IntentFilter();
+
+            filter.addAction(Intent.ACTION_TIME_TICK);
+            filter.addAction(Intent.ACTION_TIME_CHANGED);
+            filter.addAction(Intent.ACTION_TIMEZONE_CHANGED);
+
+            getContext().registerReceiver(mIntentReceiver, filter, null, mHandler);
+        }
+
         // NOTE: It's safe to do these after registering the receiver since the receiver always runs
         // in the main thread, therefore the receiver can't run before this method returns.
 
@@ -132,17 +118,14 @@ public class AnalogClock extends View {
         // Make sure we update to the current time
         onTimeChanged();
     }
-    
+
     @Override
-    protected void onLayout(boolean changed, int left, int top, int right,
-    		int bottom) {
-    	// TODO Auto-generated method stub
-    	super.onLayout(changed, left, top, right, bottom);
-    	
-    	mRight = right;
-		mLeft = left;
-		mTop = top;
-		mBottom = bottom;
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        if (mAttached) {
+            getContext().unregisterReceiver(mIntentReceiver);
+            mAttached = false;
+        }
     }
 
     @Override
@@ -185,8 +168,8 @@ public class AnalogClock extends View {
             mChanged = false;
         }
 
-        int availableWidth = mRight - mLeft;
-        int availableHeight = mBottom - mTop;
+        int availableWidth = getRight() - getLeft();
+        int availableHeight = getBottom() - getTop();
 
         int x = availableWidth / 2;
         int y = availableHeight / 2;
@@ -251,14 +234,20 @@ public class AnalogClock extends View {
 
         updateContentDescription(mCalendar);
     }
-    
-    /**
-     * set clock widget to now;
-     */
-    public void updateClock(){
-    	onTimeChanged();       
-        invalidate();
-    }
+
+    private final BroadcastReceiver mIntentReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equals(Intent.ACTION_TIMEZONE_CHANGED)) {
+                String tz = intent.getStringExtra("time-zone");
+                mCalendar = new Time(TimeZone.getTimeZone(tz).getID());
+            }
+
+            onTimeChanged();
+            
+            invalidate();
+        }
+    };
 
     private void updateContentDescription(Time time) {
         final int flags = DateUtils.FORMAT_SHOW_TIME | DateUtils.FORMAT_24HOUR;
@@ -266,4 +255,23 @@ public class AnalogClock extends View {
                 time.toMillis(false), flags);
         setContentDescription(contentDescription);
     }
+    
+    public void setDial(Drawable drawable){
+    	
+    }
+    
+    public void HourHand(Drawable drawable){
+    	
+    }
+    
+    public void setMinute(Drawable drawable){
+    	
+    }
+
+	public void updateClock() {
+		// TODO Auto-generated method stub
+		onTimeChanged();
+		invalidate();
+	}
 }
+

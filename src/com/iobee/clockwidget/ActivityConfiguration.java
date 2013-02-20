@@ -1,9 +1,12 @@
 package com.iobee.clockwidget;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,6 +18,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ResolveInfo;
 import android.content.res.AssetManager;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -23,6 +27,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -35,10 +41,13 @@ import android.widget.Toast;
 
 import com.iobee.clockwidget.view.AnalogClock;
 
-public class ActivityMain extends Activity {
+public class ActivityConfiguration extends Activity {
 	private static final int PICK_FROM_CAMERA = 0;
 	private static final int PICK_FROM_FILE = 1;
 	private static final int CROP_FROM_CAMERA = 3;
+	
+	private static final String TAG = ActivityConfiguration.class.getName();
+	
 	private AnalogClock analogClock;
 	private HorizontalScrollView vBoxHorinzon;
 	private LinearLayout vBoxDial;
@@ -209,7 +218,22 @@ public class ActivityMain extends Activity {
 
 			if (extras != null) {
 				Bitmap photo = extras.getParcelable("data");
-
+				
+				File testFile = new File("/sdcard/test.png");		
+				try {
+					testFile.createNewFile();
+					OutputStream os = new BufferedOutputStream(new FileOutputStream(testFile));
+					photo.compress(Bitmap.CompressFormat.PNG, 0, os);
+					os.flush();
+					os.close();
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
 				vBoxDial.addView(createImageView(new BitmapDrawable(photo)));
 			}
 
@@ -240,23 +264,30 @@ public class ActivityMain extends Activity {
 			return;
 		} else {
 			intent.setData(mImageCaptureUri);
-
-			intent.putExtra("outputX", 200);
-			intent.putExtra("outputY", 200);
+			intent.putExtra("outputX", convertDpToPixel(110));
+			intent.putExtra("outputY", convertDpToPixel(110));
 			intent.putExtra("aspectX", 1);
 			intent.putExtra("aspectY", 1);
 			intent.putExtra("scale", true);
 			intent.putExtra("return-data", true);
-			intent.putExtra("circleCrop", "true");
-
+			//intent.putExtra("circleCrop", "true");
+			
 			Intent i = new Intent(intent);
-			ResolveInfo res = list.get(0);
+			ResolveInfo res = list.get(1);
 
 			i.setComponent(new ComponentName(res.activityInfo.packageName,
 					res.activityInfo.name));
 
 			startActivityForResult(i, CROP_FROM_CAMERA);
 		}
+	}
+	
+	private float convertDpToPixel(float dp){
+	    Resources resources = mContext.getResources();
+	    DisplayMetrics metrics = resources.getDisplayMetrics();
+	    Log.i(TAG, metrics.densityDpi+ "");
+	    float px = dp * (metrics.densityDpi/160f);
+	    return px;
 	}
 
 }
