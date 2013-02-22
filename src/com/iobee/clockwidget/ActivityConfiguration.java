@@ -7,11 +7,14 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.appwidget.AppWidgetManager;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Context;
@@ -20,12 +23,14 @@ import android.content.pm.ResolveInfo;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.Path;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.storage.StorageManager;
 import android.provider.MediaStore;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -41,13 +46,16 @@ import android.widget.Toast;
 
 import com.iobee.clockwidget.tool.DrawableUtils;
 import com.iobee.clockwidget.view.AnalogClock;
+import com.iobee.clockwidget.view.app.AnalogClockProvider;
 
 public class ActivityConfiguration extends Activity {
+	private static final String TAG = ActivityConfiguration.class.getName();
+	
 	private static final int PICK_FROM_CAMERA = 0;
 	private static final int PICK_FROM_FILE = 1;
 	private static final int CROP_FROM_CAMERA = 3;
 	
-	private static final String TAG = ActivityConfiguration.class.getName();
+	private int appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID;
 	
 	private AnalogClock analogClock;
 	private HorizontalScrollView vBoxHorinzon;
@@ -63,6 +71,12 @@ public class ActivityConfiguration extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+		
+		Bundle extras = getIntent().getExtras();
+		if(extras != null){
+			appWidgetId = extras.getInt(AppWidgetManager.EXTRA_APPWIDGET_ID);
+		}
+		
 		mContext = this;
 
 		analogClock = (AnalogClock) findViewById(R.id.analogClock);
@@ -71,7 +85,17 @@ public class ActivityConfiguration extends Activity {
 		
 		drawableUtils = new DrawableUtils(this);
 
-		drawableUtils.addAssetsDrawableToBox(vBoxDial, null);
+		drawableUtils.test_addAssetsDrawableToBox(vBoxDial, new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				AnalogClockProvider.updateWidget(mContext, appWidgetId);
+				Log.i(TAG, "-->onClick");
+			}
+		});
+		
+		drawableUtils.addSDCardDrawableToBox(vBoxDial, null);
 		
 		//TODO:move this function to DrawableUtils
 		vBoxDial.addView(createAddButton());
@@ -159,20 +183,7 @@ public class ActivityConfiguration extends Activity {
 			if (extras != null) {
 				Bitmap photo = extras.getParcelable("data");
 				
-				File testFile = new File("/sdcard/test.png");		
-				try {
-					testFile.createNewFile();
-					OutputStream os = new BufferedOutputStream(new FileOutputStream(testFile));
-					photo.compress(Bitmap.CompressFormat.PNG, 0, os);
-					os.flush();
-					os.close();
-				} catch (FileNotFoundException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				saveCustiomDrawable(photo);
 				
 				vBoxDial.addView(drawableUtils.createImageView(new BitmapDrawable(photo)));
 			}
@@ -187,6 +198,34 @@ public class ActivityConfiguration extends Activity {
 		}
 	}
 
+	/**
+	 * @param photo
+	 */
+	private void saveCustiomDrawable(Bitmap photo) {
+		File externFile = new File(Environment.getExternalStorageDirectory(), "clock widget");
+		if(!externFile.exists()){
+			if(!externFile.mkdir()){
+				Log.d(TAG, "failed to create clock widget directory");
+			}
+		}		
+		String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+		File mediaFile = new File(externFile.getPath() + File.separator + "PIC" + timeStamp + ".bmp");
+			
+		try {
+			mediaFile.createNewFile();
+			OutputStream os = new BufferedOutputStream(new FileOutputStream(mediaFile));
+			photo.compress(Bitmap.CompressFormat.PNG, 0, os);
+			os.flush();
+			os.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
 	private void doCrop() {
 		// TODO Auto-generated method stub
 		Intent intent = new Intent("com.android.camera.action.CROP");

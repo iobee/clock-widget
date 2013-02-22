@@ -257,7 +257,9 @@ public class AnalogClock extends View {
     }
     
     public void setDial(Drawable drawable){
-    	
+    	if(drawable != null){
+    		mDial = drawable;
+    	}
     }
     
     public void HourHand(Drawable drawable){

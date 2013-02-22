@@ -7,6 +7,10 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 
 public class InfoDrawable {
+	public static final String SCHEME_ASSET = "asset";
+	public static final String SCHEME_FILE = "file";
+	public static final String SCHEME_DRAWABLE = "drawable";
+	
 	private Drawable mDrawable;
 	private Uri mUri;
 	
