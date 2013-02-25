@@ -271,10 +271,10 @@ public class AnalogClock extends View {
     	
     	Log.d(TAG, mDialHeight + "setDial");
     	mChanged = true;
-    	requestLayout();
+    	invalidate();
     }
     
-    public void HourHand(Drawable drawable){
+    public void setHourHand(Drawable drawable){
     	if(drawable != null){
     		mHourHand = drawable;
     	}
@@ -282,10 +282,11 @@ public class AnalogClock extends View {
     	invalidate();
     }
     
-    public void setMinute(Drawable drawable){
+    public void setMinuteHand(Drawable drawable){
     	if(drawable != null){
     		mMinuteHand = drawable;
     	}
+    	mChanged = true;
     	invalidate();
     }
 

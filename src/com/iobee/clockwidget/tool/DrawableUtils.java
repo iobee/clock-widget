@@ -35,74 +35,56 @@ public class DrawableUtils {
 	protected static final String TAG = DrawableUtils.class.getName();
 	private Context mContext;
 	private int hasAddedView = 0;
-	private SharedPreferences sp;
-		
-	private View.OnClickListener ocls;
-	private LinearLayout viewBox;
 	
 	public interface OnClickListener{
-		public void onClick(View v, Drawable d);
+		public void onClick(View v, InfoDrawable d);
 	}
 	
 	public DrawableUtils(Context mContext) {
 		this.mContext = mContext;
-		sp = mContext.getSharedPreferences(AnalogInformation.ANALOG_NAME, Context.MODE_PRIVATE);
 	}
 	
 	public DrawableUtils(Context mContext, LinearLayout viewBox) {
 		this.mContext = mContext;
-		this.viewBox = viewBox;
-		sp = mContext.getSharedPreferences(AnalogInformation.ANALOG_NAME, Context.MODE_PRIVATE);
+	}
+	/**
+	 * add dial drawable form sdcard and assets to view box;
+	 * @param viewBox the viewBox which will someviews add to;
+	 * @param ocls listen to the view'click;
+	 */
+	public void addDialDrawable(LinearLayout viewBox, OnClickListener ocls){
+		viewBox.removeAllViews();
+		addSDCardDrawableToBox(viewBox, ocls);
+		addDialFromAssets(viewBox, ocls);
 	}
 	
-	public void addSDCardDrawableToBox(LinearLayout viewBox, OnClickListener ocls){
+	private void addSDCardDrawableToBox(LinearLayout viewBox, OnClickListener ocls){
 		List<InfoDrawable> drawables = getDrawablesFromSDCard();
 		for (InfoDrawable dial : drawables) {
-			hasAddedView++;
 			viewBox.addView(createImageView(dial, ocls));
 		}
 	}
 	
-	public void addDialFromAssets(LinearLayout viewBox, OnClickListener ocls) {
-		viewBox.removeAllViews();
-		List<InfoDrawable> drawables = test_getDrawableFromAssets("dial");
+	private void addDialFromAssets(LinearLayout viewBox, OnClickListener ocls) {
+		List<InfoDrawable> drawables = getDrawableFromAssets("dial");
 		for (InfoDrawable dial : drawables) {
-			hasAddedView++;
 			viewBox.addView(createImageView(dial, ocls));
 		}
 	}
 	
-	public void addHandFromAssets(LinearLayout viewBox, OnClickListener ocls) {
+	public void addHandDrawable(LinearLayout viewBox, OnClickListener ocls){
 		viewBox.removeAllViews();
-		List<InfoDrawable> drawables = test_getDrawableFromAssets("hand");
-		for (InfoDrawable dial : drawables) {
-			hasAddedView++;
-			viewBox.addView(createImageView(dial, ocls));
-		}
-	}
-	
-	/**
-	 * 根据drawable生成响应ocls操作的ImageView;
-	 * @param drawable
-	 * @param ocls
-	 * @return
-	 */
-	@TargetApi(Build.VERSION_CODES.JELLY_BEAN)
-	@SuppressWarnings("deprecation")
-	public ImageView createImageView(final Drawable drawable, View.OnClickListener ocls) {
-		this.ocls = ocls;
+		addHandDrawableFromAssets(viewBox, ocls);
 		
-		ImageView v = new ImageView(mContext);
-		int sdk = android.os.Build.VERSION.SDK_INT;
-		if (sdk < android.os.Build.VERSION_CODES.JELLY_BEAN) {
-			v.setBackgroundDrawable(drawable);
-		} else {
-			v.setBackground(drawable);
+	}
+	
+	private void addHandDrawableFromAssets(LinearLayout viewBox, OnClickListener ocls) {
+		viewBox.removeAllViews();
+		List<InfoDrawable> drawables = getDrawableFromAssets("hand");
+		for (InfoDrawable dial : drawables) {
+			hasAddedView++;
+			viewBox.addView(createImageView(dial, ocls));
 		}
-
-		v.setOnClickListener(ocls);
-
-		return v;
 	}
 	
 	@TargetApi(Build.VERSION_CODES.JELLY_BEAN)
@@ -120,13 +102,9 @@ public class DrawableUtils {
 			
 			@Override
 			public void onClick(View v) {
-				// TODO Auto-generated method stub
-				SharedPreferences.Editor et = sp.edit();
-				et.putString(AnalogInformation.ANALOG_DRAWABLE_DIAL, drawable.getUri().toString());
-				et.commit();
-				
+				// TODO Auto-generated method stub				
 				if(ocls != null){
-					ocls.onClick(v, drawable.getDrawable());
+					ocls.onClick(v, drawable);
 				}
 				
 				Log.i(TAG, drawable.getUri().getSchemeSpecificPart());
@@ -136,41 +114,7 @@ public class DrawableUtils {
 		return v;
 	}
 	
-	@SuppressWarnings("deprecation")
-	@TargetApi(Build.VERSION_CODES.JELLY_BEAN) 
-	public ImageView createImageView(final Drawable drawable) {
-		ImageView v = new ImageView(mContext);
-		int sdk = android.os.Build.VERSION.SDK_INT;
-		if (sdk < android.os.Build.VERSION_CODES.JELLY_BEAN) {
-			v.setBackgroundDrawable(drawable);
-		} else {
-			v.setBackground(drawable);
-		}
-
-		v.setOnClickListener(ocls);
-
-		return v;
-	}
-	
-	private List<Drawable> getDrawableFromAssets(String path) {
-		List<Drawable> drawables = new ArrayList<Drawable>();
-	
-		try {
-			AssetManager am = mContext.getResources().getAssets();
-			String[] files = am.list(path);
-			for (String file : files) {
-				drawables.add(Drawable.createFromStream(
-						am.open(path + "/" + file), null));
-			}
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	
-		return drawables;
-	}
-	
-	private List<InfoDrawable> test_getDrawableFromAssets(String path) {
+	private List<InfoDrawable> getDrawableFromAssets(String path) {
 		List<InfoDrawable> infoDrawables = new ArrayList<InfoDrawable>();
 	
 		try {
@@ -237,5 +181,23 @@ public class DrawableUtils {
 		c.drawBitmap(clock_dial_base, null, dst, null);
 		
 		return bitmapTemp;
+	}
+	
+	public static InfoDrawable getHourHandInfoDrawable(Context context, Uri mUri) throws IOException{
+		String prefixUri = mUri.getSchemeSpecificPart().replace("assets:hand/clock_hand", "assets:hour hand/clock_hand_hour");
+		Uri uri = Uri.fromParts("assets", prefixUri, null);
+		AssetManager am = context.getResources().getAssets();
+		Drawable drawable = Drawable.createFromStream(am.open(prefixUri), null);
+		InfoDrawable infoDrawable = new InfoDrawable(drawable, uri);
+		return infoDrawable;
+	}
+	
+	public static InfoDrawable getMinuteHandInfoDrawable(Context context, Uri mUri) throws IOException{
+		String prefixUri = mUri.getSchemeSpecificPart().replace("assets:hand/clock_hand", "assets:minute hand/clock_hand_minute");
+		Uri uri = Uri.fromParts("assets", prefixUri, null);
+		AssetManager am = context.getResources().getAssets();
+		Drawable drawable = Drawable.createFromStream(am.open(prefixUri), null);
+		InfoDrawable infoDrawable = new InfoDrawable(drawable, uri);
+		return infoDrawable;
 	}
 }

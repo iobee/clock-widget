@@ -19,6 +19,7 @@ import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ResolveInfo;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
@@ -45,19 +46,21 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.iobee.clockwidget.base.AnalogInformation;
+import com.iobee.clockwidget.base.InfoDrawable;
 import com.iobee.clockwidget.tool.DrawableUtils;
 import com.iobee.clockwidget.view.AnalogClock;
 import com.iobee.clockwidget.view.app.AnalogClockProvider;
 
 public class ActivityConfiguration extends Activity {
 	private static final String TAG = ActivityConfiguration.class.getName();
-	
+
 	private static final int PICK_FROM_CAMERA = 0;
 	private static final int PICK_FROM_FILE = 1;
 	private static final int CROP_FROM_CAMERA = 3;
-	
+
 	private int appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID;
-	
+
 	private AnalogClock analogClock;
 	private HorizontalScrollView vBoxHorinzon;
 	private LinearLayout vBoxDial;
@@ -68,40 +71,33 @@ public class ActivityConfiguration extends Activity {
 	private Context mContext;
 	private DrawableUtils drawableUtils;
 
+	private SharedPreferences sp;
+	private SharedPreferences.Editor et;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		
+
 		Bundle extras = getIntent().getExtras();
-		if(extras != null){
+		if (extras != null) {
 			appWidgetId = extras.getInt(AppWidgetManager.EXTRA_APPWIDGET_ID);
 		}
-		
+
 		mContext = this;
 
 		analogClock = (AnalogClock) findViewById(R.id.analogClock);
 		vBoxHorinzon = (HorizontalScrollView) findViewById(R.id.viewBox_horinzon);
 		vBoxDial = (LinearLayout) findViewById(R.id.viewBox_dial);
-		
+
 		drawableUtils = new DrawableUtils(this);
 
-		drawableUtils.addDialFromAssets(vBoxDial, new DrawableUtils.OnClickListener() {
-			
-			@Override
-			public void onClick(View v, Drawable d) {
-				// TODO Auto-generated method stub
-				AnalogClockProvider.updateWidget(mContext, appWidgetId);
-				Log.i(TAG, "-->onClick");
-				
-				analogClock.setDial(d);
-			}
-		});
-		
-		drawableUtils.addSDCardDrawableToBox(vBoxDial, null);
-		
-		//TODO:move this function to DrawableUtils
+		// TODO:move this function to DrawableUtils
 		vBoxDial.addView(createAddButton());
+		
+		sp = getSharedPreferences(
+				AnalogInformation.ANALOG_NAME, MODE_PRIVATE);
+		et = sp.edit();
 	}
 
 	@Override
@@ -117,16 +113,55 @@ public class ActivityConfiguration extends Activity {
 		switch (item.getItemId()) {
 		case R.id.menu_settings_dial:
 			vBoxHorinzon.setVisibility(View.VISIBLE);
-			drawableUtils.addDialFromAssets(vBoxDial, null);
+			drawableUtils.addDialDrawable(vBoxDial,
+					new DrawableUtils.OnClickListener() {
+
+						@Override
+						public void onClick(View v, InfoDrawable d) {
+							// TODO Auto-generated method stub
+							AnalogClockProvider.updateWidget(mContext,
+									appWidgetId);
+							Log.i(TAG, "-->onClick");
+							analogClock.setDial(d.getDrawable());
+							et.putString(
+									AnalogInformation.ANALOG_DRAWABLE_DIAL, d
+											.getUri().toString());
+							et.commit();
+						}
+					});
 			break;
 		case R.id.menu_settings_hand:
 			vBoxHorinzon.setVisibility(View.VISIBLE);
-			drawableUtils.addHandFromAssets(vBoxDial, null);
+			drawableUtils.addHandDrawable(vBoxDial,
+					new DrawableUtils.OnClickListener() {
+
+						@Override
+						public void onClick(View v, InfoDrawable d) {
+							// TODO Auto-generated method stub
+							InfoDrawable hourInfoDrawable = null;
+							InfoDrawable minuteInfoDrawable = null;
+							try {
+								hourInfoDrawable = DrawableUtils
+										.getHourHandInfoDrawable(mContext,
+												d.getUri());
+								minuteInfoDrawable = DrawableUtils
+										.getMinuteHandInfoDrawable(mContext,
+												d.getUri());
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+							analogClock.setMinuteHand(minuteInfoDrawable
+									.getDrawable());
+							analogClock.setHourHand(hourInfoDrawable
+									.getDrawable());
+						}
+					});
 			break;
 		default:
 			break;
 		}
-		
+
 		return true;
 	}
 
@@ -196,11 +231,13 @@ public class ActivityConfiguration extends Activity {
 			Bundle extras = data.getExtras();
 
 			if (extras != null) {
-				Bitmap photo = drawableUtils.createCircleAvatar((Bitmap)extras.getParcelable("data"));
-				
-				saveCustiomDrawable(photo);
-				
-				vBoxDial.addView(drawableUtils.createImageView(new BitmapDrawable(photo)));
+				Bitmap photo = drawableUtils.createCircleAvatar((Bitmap) extras
+						.getParcelable("data"));
+
+				InfoDrawable infoDrawable = saveCustiomDrawable(photo);
+
+				vBoxDial.addView(drawableUtils.createImageView(infoDrawable,
+						null));
 			}
 
 			File f = new File(mImageCaptureUri.getPath());
@@ -216,19 +253,23 @@ public class ActivityConfiguration extends Activity {
 	/**
 	 * @param photo
 	 */
-	private void saveCustiomDrawable(Bitmap photo) {
-		File externFile = new File(Environment.getExternalStorageDirectory(), "clock widget");
-		if(!externFile.exists()){
-			if(!externFile.mkdir()){
+	private InfoDrawable saveCustiomDrawable(Bitmap photo) {
+		File externFile = new File(Environment.getExternalStorageDirectory(),
+				"clock widget");
+		if (!externFile.exists()) {
+			if (!externFile.mkdir()) {
 				Log.d(TAG, "failed to create clock widget directory");
 			}
-		}		
-		String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-		File mediaFile = new File(externFile.getPath() + File.separator + "PIC" + timeStamp + ".bmp");
-			
+		}
+		String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss")
+				.format(new Date());
+		File mediaFile = new File(externFile.getPath() + File.separator + "PIC"
+				+ timeStamp + ".bmp");
+
 		try {
 			mediaFile.createNewFile();
-			OutputStream os = new BufferedOutputStream(new FileOutputStream(mediaFile));
+			OutputStream os = new BufferedOutputStream(new FileOutputStream(
+					mediaFile));
 			photo.compress(Bitmap.CompressFormat.PNG, 0, os);
 			os.flush();
 			os.close();
@@ -239,8 +280,11 @@ public class ActivityConfiguration extends Activity {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+
+		return new InfoDrawable(new BitmapDrawable(getResources(), photo),
+				Uri.fromFile(mediaFile));
 	}
-	
+
 	private void doCrop() {
 		// TODO Auto-generated method stub
 		Intent intent = new Intent("com.android.camera.action.CROP");
@@ -264,8 +308,8 @@ public class ActivityConfiguration extends Activity {
 			intent.putExtra("aspectY", 1);
 			intent.putExtra("scale", true);
 			intent.putExtra("return-data", true);
-			//intent.putExtra("circleCrop", "true");
-			
+			// intent.putExtra("circleCrop", "true");
+
 			Intent i = new Intent(intent);
 			ResolveInfo res = list.get(0);
 
@@ -275,13 +319,13 @@ public class ActivityConfiguration extends Activity {
 			startActivityForResult(i, CROP_FROM_CAMERA);
 		}
 	}
-	
-	private float convertDpToPixel(float dp){
-	    Resources resources = mContext.getResources();
-	    DisplayMetrics metrics = resources.getDisplayMetrics();
-	    Log.i(TAG, metrics.densityDpi+ "");
-	    float px = dp * (metrics.densityDpi/160f);
-	    return px;
+
+	private float convertDpToPixel(float dp) {
+		Resources resources = mContext.getResources();
+		DisplayMetrics metrics = resources.getDisplayMetrics();
+		Log.i(TAG, metrics.densityDpi + "");
+		float px = dp * (metrics.densityDpi / 160f);
+		return px;
 	}
 
 }
