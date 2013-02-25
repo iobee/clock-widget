@@ -18,6 +18,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.util.Log;
@@ -131,20 +132,20 @@ public class AnalogClockProvider extends AppWidgetProvider {
 				AnalogInformation.ANALOG_NAME, Context.MODE_PRIVATE);
 		Uri uri = Uri.parse(sp.getString(
 				AnalogInformation.ANALOG_DRAWABLE_DIAL, "test"));
-		Drawable dw = null;
+		BitmapDrawable bitmapDrawable = null;
 		if (uri.getScheme().equals(InfoDrawable.SCHEME_ASSET)) {
 			AssetManager am = context.getResources().getAssets();
 			try {
-				dw = Drawable.createFromStream(
-						am.open(uri.getSchemeSpecificPart()), null);
+				bitmapDrawable = new BitmapDrawable(context.getResources(), am.open(uri.getSchemeSpecificPart()));
+				bitmapDrawable.setTargetDensity(context.getResources().getDisplayMetrics());
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		} else if (uri.getScheme().equals(InfoDrawable.SCHEME_FILE)) {
-			dw = Drawable.createFromPath(uri.getPath());
+			bitmapDrawable = new BitmapDrawable(context.getResources(), uri.getPath());
 		}
-		return dw;
+		return bitmapDrawable;
 	}
 
 	@Override

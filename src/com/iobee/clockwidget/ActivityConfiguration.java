@@ -38,6 +38,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
@@ -85,13 +86,15 @@ public class ActivityConfiguration extends Activity {
 		
 		drawableUtils = new DrawableUtils(this);
 
-		drawableUtils.test_addAssetsDrawableToBox(vBoxDial, new View.OnClickListener() {
+		drawableUtils.addDialFromAssets(vBoxDial, new DrawableUtils.OnClickListener() {
 			
 			@Override
-			public void onClick(View v) {
+			public void onClick(View v, Drawable d) {
 				// TODO Auto-generated method stub
 				AnalogClockProvider.updateWidget(mContext, appWidgetId);
 				Log.i(TAG, "-->onClick");
+				
+				analogClock.setDial(d);
 			}
 		});
 		
@@ -111,7 +114,19 @@ public class ActivityConfiguration extends Activity {
 	@Override
 	public boolean onMenuItemSelected(int featureId, MenuItem item) {
 		// TODO Auto-generated method stub
-		vBoxHorinzon.setVisibility(View.VISIBLE);
+		switch (item.getItemId()) {
+		case R.id.menu_settings_dial:
+			vBoxHorinzon.setVisibility(View.VISIBLE);
+			drawableUtils.addDialFromAssets(vBoxDial, null);
+			break;
+		case R.id.menu_settings_hand:
+			vBoxHorinzon.setVisibility(View.VISIBLE);
+			drawableUtils.addHandFromAssets(vBoxDial, null);
+			break;
+		default:
+			break;
+		}
+		
 		return true;
 	}
 
@@ -181,7 +196,7 @@ public class ActivityConfiguration extends Activity {
 			Bundle extras = data.getExtras();
 
 			if (extras != null) {
-				Bitmap photo = extras.getParcelable("data");
+				Bitmap photo = drawableUtils.createCircleAvatar((Bitmap)extras.getParcelable("data"));
 				
 				saveCustiomDrawable(photo);
 				
@@ -243,8 +258,8 @@ public class ActivityConfiguration extends Activity {
 			return;
 		} else {
 			intent.setData(mImageCaptureUri);
-			intent.putExtra("outputX", convertDpToPixel(110));
-			intent.putExtra("outputY", convertDpToPixel(110));
+			intent.putExtra("outputX", convertDpToPixel(150));
+			intent.putExtra("outputY", convertDpToPixel(150));
 			intent.putExtra("aspectX", 1);
 			intent.putExtra("aspectY", 1);
 			intent.putExtra("scale", true);
@@ -252,7 +267,7 @@ public class ActivityConfiguration extends Activity {
 			//intent.putExtra("circleCrop", "true");
 			
 			Intent i = new Intent(intent);
-			ResolveInfo res = list.get(1);
+			ResolveInfo res = list.get(0);
 
 			i.setComponent(new ComponentName(res.activityInfo.packageName,
 					res.activityInfo.name));

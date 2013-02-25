@@ -3,6 +3,9 @@
 
     <string name="app_name">Clock Widget</string>
     <string name="hello_world">Hello world!</string>
-    <string name="menu_settings">Settings</string>
+    
+    
+    <string name="menu_settings_dial">Settings Dial</string>
+    <string name="menu_settings_hand">Settings Hand</string>
 
 </resources>

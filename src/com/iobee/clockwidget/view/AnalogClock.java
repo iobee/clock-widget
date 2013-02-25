@@ -23,11 +23,13 @@ import android.content.BroadcastReceiver;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.text.format.DateUtils;
 import android.text.format.Time;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 import android.widget.RemoteViews.RemoteView;
 
@@ -41,7 +43,9 @@ import com.iobee.clockwidget.R;
  */
 @RemoteView
 public class AnalogClock extends View {
-    private Time mCalendar;
+    private static final String TAG = AnalogClock.class.getName();
+
+	private Time mCalendar;
 
     private Drawable mHourHand;
     private Drawable mMinuteHand;
@@ -92,6 +96,7 @@ public class AnalogClock extends View {
 
         mDialWidth = mDial.getIntrinsicWidth();
         mDialHeight = mDial.getIntrinsicHeight();
+        Log.d(TAG, mDialHeight + "Init");
     }
 
     @Override
@@ -130,6 +135,7 @@ public class AnalogClock extends View {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+    	Log.i(TAG, "-->OnMeasure");
 
         int widthMode = MeasureSpec.getMode(widthMeasureSpec);
         int widthSize =  MeasureSpec.getSize(widthMeasureSpec);
@@ -260,14 +266,27 @@ public class AnalogClock extends View {
     	if(drawable != null){
     		mDial = drawable;
     	}
+    	mDialHeight = mDial.getIntrinsicHeight();
+    	mDialWidth = mDial.getIntrinsicWidth();
+    	
+    	Log.d(TAG, mDialHeight + "setDial");
+    	mChanged = true;
+    	requestLayout();
     }
     
     public void HourHand(Drawable drawable){
-    	
+    	if(drawable != null){
+    		mHourHand = drawable;
+    	}
+    	mChanged = true;
+    	invalidate();
     }
     
     public void setMinute(Drawable drawable){
-    	
+    	if(drawable != null){
+    		mMinuteHand = drawable;
+    	}
+    	invalidate();
     }
 
 	public void updateClock() {
