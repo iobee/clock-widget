@@ -150,8 +150,10 @@ public class DrawableUtils {
 		}
 		
 		for(File file : files){
+			BitmapDrawable bitmapDrawable = new BitmapDrawable(mContext.getResources(), file.getPath());
+			bitmapDrawable.setTargetDensity(mContext.getResources().getDisplayMetrics());
 			infoDrawables.add(new InfoDrawable(
-					Drawable.createFromPath(file.getPath()), 
+					bitmapDrawable, 
 					Uri.fromFile(file)));
 			
 			Log.d(TAG, Uri.fromFile(file).toString());
