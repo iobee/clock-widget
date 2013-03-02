@@ -34,15 +34,12 @@ public class AnalogClockProvider extends AppWidgetProvider {
 	private static final String TAG = "AnalogClockProvider";
 
 	public static String ACTION_CLOCK_UPDATE = "com.iobee.clockwidget.ACTION_CLOCK_UPDATE";
-	
-	private Intent intentService;
 
 	@Override
 	public void onEnabled(Context context) {
 		// TODO Auto-generated method stub
 		super.onEnabled(context);
 		Log.i(TAG, "-->onEnabled");
-		//startTicking(context);
 		
 		//intentService = new Intent(context, AnalogClockUpdateService.class);
 		//context.startService(intentService);
@@ -55,50 +52,7 @@ public class AnalogClockProvider extends AppWidgetProvider {
 		// TODO Auto-generated method stub
 		super.onDisabled(context);
 		//context.stopService(intentService);
-		//stopTicking(context);
 	}
-
-	/**
-	 * @param context
-	 */
-	private void stopTicking(Context context) {
-		final AlarmManager alarmManager = (AlarmManager) context
-				.getSystemService(Context.ALARM_SERVICE);
-
-		alarmManager.cancel(createUpdate(context));
-	}
-
-	/**
-	 * Schedules an alarm to update the clock every minute, at the top of the
-	 * minute.
-	 * 
-	 * @param context
-	 */
-	private void startTicking(Context context) {
-		final AlarmManager alarmManager = (AlarmManager) context
-				.getSystemService(Context.ALARM_SERVICE);
-
-		// schedules updates so they occur on the top of the minute
-		final Calendar c = Calendar.getInstance();
-		c.setTimeInMillis(System.currentTimeMillis());
-		c.set(Calendar.SECOND, 0);
-		c.set(Calendar.MILLISECOND, 0);
-		c.add(Calendar.MINUTE, 1);
-		alarmManager.setRepeating(AlarmManager.RTC, c.getTimeInMillis(),
-				1000 * 60, createUpdate(context));
-	}
-
-	/**
-	 * to update the clock(s).
-	 * 
-	 * @param context
-	 * @return
-	 */
-	private PendingIntent createUpdate(Context context) {
-		return PendingIntent.getBroadcast(context, 0, new Intent(
-				ACTION_CLOCK_UPDATE), PendingIntent.FLAG_UPDATE_CURRENT);
-	}
-	
 
 	@Override
 	public void onUpdate(Context context, AppWidgetManager appWidgetManager,
@@ -127,6 +81,8 @@ public class AnalogClockProvider extends AppWidgetProvider {
 		
 		AnalogClock analogClock = new AnalogClock(context);
 		analogClock.setDial(getDialCustomDrawable(context));
+		analogClock.setMinuteHand(getMinuteCustomDrawable(context));
+		analogClock.setHourHand(getHourCustomDrawable(context));
 		analogClock.updateClock();
 		
 		//configure view, then you can get the view drawingcacheEnabled. 
@@ -165,6 +121,49 @@ public class AnalogClockProvider extends AppWidgetProvider {
 		} else if (uri.getScheme().equals(InfoDrawable.SCHEME_FILE)) {
 			bitmapDrawable = new BitmapDrawable(context.getResources(), uri.getPath());
 		}
+		return bitmapDrawable;
+	}
+	
+	private Drawable getHourCustomDrawable(Context context) {
+		SharedPreferences sp = context.getSharedPreferences(
+				AnalogInformation.ANALOG_NAME, Context.MODE_PRIVATE);
+		Uri uri = Uri.parse(sp.getString(
+				AnalogInformation.ANALOG_DRAWABLE_HOUR, "test"));
+		BitmapDrawable bitmapDrawable = null;
+		if (uri.getScheme().equals(InfoDrawable.SCHEME_ASSET)) {
+			AssetManager am = context.getResources().getAssets();
+			try {
+				bitmapDrawable = new BitmapDrawable(context.getResources(), am.open(uri.getSchemeSpecificPart()));
+				bitmapDrawable.setTargetDensity(context.getResources().getDisplayMetrics());
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} else if (uri.getScheme().equals(InfoDrawable.SCHEME_FILE)) {
+			bitmapDrawable = new BitmapDrawable(context.getResources(), uri.getPath());
+		}
+		return bitmapDrawable;
+	}
+	
+	private Drawable getMinuteCustomDrawable(Context context) {
+		SharedPreferences sp = context.getSharedPreferences(
+				AnalogInformation.ANALOG_NAME, Context.MODE_PRIVATE);
+		Uri uri = Uri.parse(sp.getString(
+				AnalogInformation.ANALOG_DRAWABLE_MINUTE, "test"));
+		BitmapDrawable bitmapDrawable = null;
+		if (uri.getScheme().equals(InfoDrawable.SCHEME_ASSET)) {
+			AssetManager am = context.getResources().getAssets();
+			try {
+				bitmapDrawable = new BitmapDrawable(context.getResources(), am.open(uri.getSchemeSpecificPart()));
+				bitmapDrawable.setTargetDensity(context.getResources().getDisplayMetrics());
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} else if (uri.getScheme().equals(InfoDrawable.SCHEME_FILE)) {
+			bitmapDrawable = new BitmapDrawable(context.getResources(), uri.getPath());
+		}
+		
 		return bitmapDrawable;
 	}
 

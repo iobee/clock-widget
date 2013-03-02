@@ -119,14 +119,15 @@ public class ActivityConfiguration extends Activity {
 						@Override
 						public void onClick(View v, InfoDrawable d) {
 							// TODO Auto-generated method stub
-							AnalogClockProvider.updateWidget(mContext,
-									appWidgetId);
 							Log.i(TAG, "-->onClick");
 							analogClock.setDial(d.getDrawable());
 							et.putString(
 									AnalogInformation.ANALOG_DRAWABLE_DIAL, d
 											.getUri().toString());
 							et.commit();
+							
+							AnalogClockProvider.updateWidget(mContext,
+									appWidgetId);
 						}
 					});
 			break;
@@ -155,6 +156,15 @@ public class ActivityConfiguration extends Activity {
 									.getDrawable());
 							analogClock.setHourHand(hourInfoDrawable
 									.getDrawable());
+							
+							et.putString(AnalogInformation.ANALOG_DRAWABLE_HOUR,
+									hourInfoDrawable.getUri().toString());
+							et.putString(AnalogInformation.ANALOG_DRAWABLE_MINUTE,
+									minuteInfoDrawable.getUri().toString());
+							et.commit();
+							
+							AnalogClockProvider.updateWidget(mContext,
+									appWidgetId);
 						}
 					});
 			break;
