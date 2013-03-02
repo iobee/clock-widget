@@ -186,7 +186,7 @@ public class DrawableUtils {
 	}
 	
 	public static InfoDrawable getHourHandInfoDrawable(Context context, Uri mUri) throws IOException{
-		String prefixUri = mUri.getSchemeSpecificPart().replace("assets:hand/clock_hand", "assets:hour hand/clock_hand_hour");
+		String prefixUri = mUri.getSchemeSpecificPart().replace("hand/clock_hand", "hour hand/clock_hand_hour");
 		Uri uri = Uri.fromParts("assets", prefixUri, null);
 		AssetManager am = context.getResources().getAssets();
 		Drawable drawable = Drawable.createFromStream(am.open(prefixUri), null);
@@ -195,7 +195,7 @@ public class DrawableUtils {
 	}
 	
 	public static InfoDrawable getMinuteHandInfoDrawable(Context context, Uri mUri) throws IOException{
-		String prefixUri = mUri.getSchemeSpecificPart().replace("assets:hand/clock_hand", "assets:minute hand/clock_hand_minute");
+		String prefixUri = mUri.getSchemeSpecificPart().replace("hand/clock_hand", "minute hand/clock_hand_minute");
 		Uri uri = Uri.fromParts("assets", prefixUri, null);
 		AssetManager am = context.getResources().getAssets();
 		Drawable drawable = Drawable.createFromStream(am.open(prefixUri), null);

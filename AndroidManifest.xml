@@ -7,13 +7,14 @@
     <uses-sdk
         android:minSdkVersion="14"
         android:targetSdkVersion="17" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@android:style/Theme.DeviceDefault.Light">
+        android:theme="@android:style/Theme.DeviceDefault.Light" >
         <activity
             android:name="com.iobee.clockwidget.ActivityConfiguration"
             android:label="@string/app_name"
@@ -24,7 +25,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        
         <activity
             android:name="org.goodev.cropimage.CropImage"
             android:configChanges="orientation|keyboardHidden"
@@ -43,6 +43,7 @@
         <receiver android:name="com.iobee.clockwidget.view.app.AnalogClockProvider" >
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.iobee.clockwidget.ACTION_CLOCK_UPDATE" />
             </intent-filter>
 
             <meta-data
@@ -50,11 +51,13 @@
                 android:resource="@xml/widget" />
 
             <intent-filter>
-                <action android:name="com.iobee.clockwidget.ACTION_CLOCK_UPDATE" />
                 <action android:name="android.intent.action.TIME_CHANGED" />
                 <action android:name="android.intent.action.TIMEZONE_CHANGED" />
             </intent-filter>
         </receiver>
+        
+        <service 
+            android:name="com.iobee.clockwidget.view.app.AnalogClockUpdateService"></service>
     </application>
 
 </manifest>

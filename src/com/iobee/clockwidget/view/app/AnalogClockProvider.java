@@ -2,6 +2,8 @@ package com.iobee.clockwidget.view.app;
 
 import java.io.IOException;
 import java.util.Calendar;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import com.iobee.clockwidget.ActivityConfiguration;
 import com.iobee.clockwidget.R;
@@ -15,34 +17,51 @@ import android.appwidget.AppWidgetProvider;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.view.View.MeasureSpec;
 import android.widget.RemoteViews;
 
 public class AnalogClockProvider extends AppWidgetProvider {
-
 	private static final String TAG = "AnalogClockProvider";
 
 	public static String ACTION_CLOCK_UPDATE = "com.iobee.clockwidget.ACTION_CLOCK_UPDATE";
+	
+	private Intent intentService;
 
 	@Override
 	public void onEnabled(Context context) {
 		// TODO Auto-generated method stub
 		super.onEnabled(context);
-
-		startTicking(context);
+		Log.i(TAG, "-->onEnabled");
+		//startTicking(context);
+		
+		//intentService = new Intent(context, AnalogClockUpdateService.class);
+		//context.startService(intentService);
+		IntentFilter i = new IntentFilter(Intent.ACTION_TIME_TICK);
+		context.getApplicationContext().registerReceiver(this, i);
 	}
 
 	@Override
 	public void onDisabled(Context context) {
 		// TODO Auto-generated method stub
 		super.onDisabled(context);
+		//context.stopService(intentService);
+		//stopTicking(context);
+	}
+
+	/**
+	 * @param context
+	 */
+	private void stopTicking(Context context) {
 		final AlarmManager alarmManager = (AlarmManager) context
 				.getSystemService(Context.ALARM_SERVICE);
 
@@ -79,6 +98,7 @@ public class AnalogClockProvider extends AppWidgetProvider {
 		return PendingIntent.getBroadcast(context, 0, new Intent(
 				ACTION_CLOCK_UPDATE), PendingIntent.FLAG_UPDATE_CURRENT);
 	}
+	
 
 	@Override
 	public void onUpdate(Context context, AppWidgetManager appWidgetManager,
@@ -152,12 +172,13 @@ public class AnalogClockProvider extends AppWidgetProvider {
 	public void onReceive(Context context, Intent intent) {
 		// TODO Auto-generated method stub
 		super.onReceive(context, intent);
-		Log.i(TAG, "-->onReceive");
+		Log.d(TAG, "-->onReceive");
 
 		final String action = intent.getAction();
 		if (ACTION_CLOCK_UPDATE.equals(action)
 				|| Intent.ACTION_TIMEZONE_CHANGED.equals(action)
-				|| Intent.ACTION_TIME_CHANGED.equals(action)) {
+				|| Intent.ACTION_TIME_CHANGED.equals(action) 
+				|| Intent.ACTION_TIME_TICK.equals(action)) {
 			final ComponentName appWidgets = new ComponentName(
 					context.getPackageName(), getClass().getName());
 
@@ -185,4 +206,5 @@ public class AnalogClockProvider extends AppWidgetProvider {
 		intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
 		context.sendBroadcast(intent);
 	}
+	
 }
